@@ -10,6 +10,7 @@ class RayData:
     def __init__(self, Input=None):
             self.Input = Input
             self.Path = self.__find_calling_folder(Input)
+            self.Nsubcarriers = []
             self.Folders = []
             self._CurrentFolder = []
             self.__Antenna = []
@@ -32,13 +33,22 @@ class RayData:
     def CurrentFolder(self):
         return self._CurrentFolder
     
+    def Frequency(self, antenna):
+        return self.__Antenna[antenna].Frequency
+    
     @CurrentFolder.setter
     def CurrentFolder(self, value):
         self._CurrentFolder = value
         self.__folder_changed = True
-    
+
+    def set_BW(self, antenna, value):
+        self.__Antenna[antenna]._BandWidth = value
+
+    def get_BW(self, antenna):
+        return self.__Antenna[antenna]._BandWidth
+
     def __getattribute__(self, item):
-        if item in ['get_CIR', 'get_TxPos', 'get_RxPos', 'get_DataInfo'] and self.__data_extracted and self.__folder_changed:
+        if item in ['get_CIR', 'get_TxPos', 'get_RxPos', 'get_DataInfo', 'Frequency'] and self.__data_extracted and self.__folder_changed:
             raise ValueError("The current folder has changed. Consider read again or change to the initial folder")
         else:
             return object.__getattribute__(self, item)
@@ -84,26 +94,28 @@ class RayData:
     def get_RxPos(self, plane=0, snapshot=0):
         return self.__Antenna[0].Planes[plane][snapshot].RxPos
     
-    def get_DataInfo(self, antenna=0, nrxpoints=True, frequency=True):
+    def get_DataInfo(self, antenna=0, nrxpoints=True, frequency=True, VERBOSE=1):
 
         # Data info
         if nrxpoints and frequency and type(antenna) is list: # Multiple antennas, Rx points, Snapshots
             n_rx_points_per_ant = []
             n_snaps_per_ant = []
             for i in range(len(self.__Antenna)):
-                print("""antenna #{},
-                       frequency = {},
-                       number of receiving points = {}, 
-                      number of snapshots = {}""".format(i, self.__Antenna[i].Frequency, self.__Antenna[i].planes_counter, self.__Antenna[i].curr_tStep))
+                if VERBOSE > 0:
+                    print("""antenna #{},
+                        frequency = {},
+                        number of receiving points = {}, 
+                        number of snapshots = {}""".format(i, self.__Antenna[i].Frequency, self.__Antenna[i].planes_counter, self.__Antenna[i].curr_tStep))
                 n_rx_points_per_ant.append(len(self.__Antenna[i].planes_counter))
                 n_snaps_per_ant.append(self.__Antenna[i].curr_tStep)
             return len(self.__Antenna), n_rx_points_per_ant, n_snaps_per_ant
         elif nrxpoints and frequency and type(antenna) in (int, float):
-            print("""antenna #{},
-                     frequency = {},
-                     number of receiving points = {}, 
-                     number of snapshots = {}""".format(antenna, self.__Antenna[antenna].Frequency,
-                                                                                      self.__Antenna[antenna].planes_counter, self.__Antenna[antenna].curr_tStep))
+            if VERBOSE > 0:
+                print("""antenna #{},
+                        frequency = {},
+                        number of receiving points = {}, 
+                        number of snapshots = {}""".format(antenna, self.__Antenna[antenna].Frequency,
+                                                                                        self.__Antenna[antenna].planes_counter, self.__Antenna[antenna].curr_tStep))
             return self.__Antenna[antenna].planes_counter, self.__Antenna[antenna].curr_tStep
 
     @staticmethod

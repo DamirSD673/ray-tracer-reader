@@ -6,11 +6,19 @@ class Antenna:
         self.TxPos = []
         self.Planes = []
         self.Frequency = []
-        self.BandWidth = []
+        self._BandWidth = []
         self.__File = str_file
         self.DopplerAnalysis = False
         self.curr_tStep = 0
         self.planes_counter = 0
+
+    @property
+    def BandWidth(self):
+        return self._BandWidth
+    
+    @BandWidth.setter
+    def Bandwidth(self, value):
+        self._BandWidth = value
 
     def scan_antenna(self):
         FILE = os.path.join(self.__File)
@@ -37,7 +45,7 @@ class Antenna:
                 line = line.replace('FREQUENCY', '')
                 line = line.replace('\n', '')
                 freq = np.array(line).astype(np.float64)
-                self.Frequency = freq
+                self.Frequency = np.float32(freq)
 
             if 'ANTENNA_TIME_STEP' in line:
                 self.DopplerAnalysis = True
